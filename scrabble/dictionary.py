@@ -1,5 +1,4 @@
 from __future__ import annotations
-from typing import Callable
 
 import pickle
 
@@ -31,22 +30,23 @@ class Node:
 
 
 class Tree:
-    def __init__(self) -> None:
-        self.root_node: Node = Node()
+    def __init__(self, root_node: Node) -> None:
+        self.root_node = root_node
 
-    def build_from_txt(self, filepath: str) -> None:
+    @staticmethod
+    def build_from_txt(filepath: str) -> Tree:
         """
         Build the dictionary tree from a txt file of all valid words
         :param filepath: filepath to txt file with all valid words
-        :return:
+        :return: the dictionary tree created
         """
         with open(filepath, "r") as f:
             word_list = f.read().split()
 
         # build dictionary tree
-        self.root_node = Node()
+        root_node = Node()
         for word in word_list:
-            current_node = self.root_node
+            current_node = root_node
 
             for letter in word:
                 next_node = current_node.get_child(letter)
@@ -57,14 +57,18 @@ class Tree:
 
             current_node.terminal = True
 
-    def build_from_save(self, filepath: str) -> None:
+        return Tree(root_node)
+
+    @staticmethod
+    def build_from_save(filepath: str) -> Tree:
         """
         Build the dictionary tree from a pickle file
         :param filepath: filepath to the pickle file
-        :return:
+        :return: the dictionary tree created
         """
         with open(filepath, "rb") as f:
-            self.root_node = pickle.load(f)
+            root_node = pickle.load(f)
+        return Tree(root_node)
 
     def save(self, filepath: str):
         """
@@ -94,16 +98,18 @@ class Tree:
         """
         Check if a word exists in the tree
         :param word: word to check in upercase
-        :return: terminal node if word exists, else None
+        :return: node if terminal node if word exists, else None
         """
-        found_node = self.get_node(word)
-        if found_node is not None and found_node.terminal:
+        try:
+            found_node = self.get_node(word)
+        except KeyError:
+            return None
+
+        if found_node.terminal:
             return found_node
         return None
 
 
 if __name__ == "__main__":
-    d = Tree()
-
-    d.build_from_txt("assets/CSW21.txt")
+    d = Tree.build_from_txt("assets/CSW21.txt")
     d.save("assets/CSW21.pickle")

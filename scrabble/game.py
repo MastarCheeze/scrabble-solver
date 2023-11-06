@@ -1,6 +1,6 @@
 from scrabble import rules
 from scrabble.board import Board
-from scrabble.move import Move
+from scrabble.primitives import Move
 
 
 class PartialGame:

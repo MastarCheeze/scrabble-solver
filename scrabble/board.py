@@ -3,12 +3,11 @@ from __future__ import annotations
 from typing import Callable, Iterator
 
 import numpy as np
+import numpy.typing as npt
 from colorama import Fore, Back  # TODO remove colorama dependency
 
 import scrabble.rules as rules
-from scrabble.move import Move
-from scrabble.position import Position
-import scrabble.position as position
+from scrabble.primitives import Move, PositionUtils, Position
 
 
 class Board:
@@ -22,6 +21,10 @@ class Board:
 
     def __init__(self) -> None:
         self._board = np.full((15, 15), " ", dtype=object)
+
+    @property
+    def board(self) -> npt.NDArray[np.int_]:
+        return self._board
 
     def get_square(self, pos: Position) -> str:
         """
@@ -188,7 +191,7 @@ class Board:
         while True:
             # stop traversal if out of bounds
             current_pos = (current_pos[0] + direction[0], current_pos[1] + direction[1])
-            if position.out_of_bounds(current_pos):
+            if PositionUtils.out_of_bounds(current_pos):
                 break
 
             # stop traversal if condition is satisfied
@@ -245,7 +248,7 @@ class Board:
         contents = self._board.flatten()
 
         for pos, s in args:
-            contents[position.flat_pos(pos)] = s
+            contents[PositionUtils.flat_pos(pos)] = s
 
         print(board_string.format(*contents))
 
@@ -264,13 +267,13 @@ board_string = board_string.rstrip()
 # insert color into board display string
 colors = [Back.LIGHTBLACK_EX for _ in range(15 * 15)]
 for row, col in rules.DL:
-    colors[position.flat_pos((row, col))] = Board.DL_COLOR
+    colors[PositionUtils.flat_pos((row, col))] = Board.DL_COLOR
 for row, col in rules.TL:
-    colors[position.flat_pos((row, col))] = Board.TL_COLOR
+    colors[PositionUtils.flat_pos((row, col))] = Board.TL_COLOR
 for row, col in rules.DW:
-    colors[position.flat_pos((row, col))] = Board.DW_COLOR
+    colors[PositionUtils.flat_pos((row, col))] = Board.DW_COLOR
 for row, col in rules.TW:
-    colors[position.flat_pos((row, col))] = Board.TW_COLOR
+    colors[PositionUtils.flat_pos((row, col))] = Board.TW_COLOR
 board_string = board_string.format(*colors)
 
 Board.boardString = board_string
