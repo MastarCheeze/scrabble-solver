@@ -11,7 +11,13 @@ from scrabble.primitives import Move, PositionUtils, Position
 
 
 class Board:
-    """Representation of a scrabble board"""
+    """A scrabble board.
+
+    Each tile in the board is represented by a single-character string
+    * Uppercase chars represent a tile with that letter.
+    * Lowercase chars represent a blank used as a tile with that letter.
+    * " " represent no tiles have been placed on the square.
+    """
 
     board_string: str
     DL_COLOR = Back.CYAN
@@ -19,53 +25,92 @@ class Board:
     DW_COLOR = Back.YELLOW
     TW_COLOR = Back.RED
 
-    def __init__(self) -> None:
-        self._board = np.full((15, 15), " ", dtype=object)
+    def __init__(self, board: npt.NDArray | None = None) -> None:
+        """Initialises an empty board.
+
+        Parameters
+        ----------
+        board : ndarray, optional
+            15x15 2D list of tiles to initialise the board with.
+        """
+        if board is None:
+            self._board = np.full((15, 15), " ", dtype=object)
+        else:
+            self._board = board
 
     @property
     def board(self) -> npt.NDArray[np.int_]:
+        """Returns the board.
+
+        Returns
+        -------
+        ndarray
+            15x15 2D list of tiles.
+        """
         return self._board
 
     def get_square(self, pos: Position) -> str:
-        """
-        Gets the tile placed at the given square position.
-        :param pos: position
-        :return: tile letter
+        """Gets the tile placed at the given square position.
+
+        Parameters
+        ----------
+        pos : position
+            Position of the square to target.
+
+        Returns
+        -------
+        str
+            A tile.
         """
         return self._board[pos]
 
     def set_square(self, pos: Position, tile: str) -> None:
-        """
-        Sets the tile placed at a given square position.
-        :param pos: position
-        :param tile: tile letter to place
-        :return:
+        """Sets the tile placed at a given square position.
+
+        Parameters
+        ----------
+        pos : position
+            Position of the square to target.
+        tile : str
+            Tile to place at position.
         """
         self._board[pos] = tile
 
     def make_move(self, move: Move):
-        """
-        Make a move on the board
-        :param move: move to make
-        :return:
+        """Make a move on the board.
+
+        Moves should not be made before calling :ref:`get_words_formed` or else the mode made will be removed.
+
+        Parameters
+        ----------
+        move : Move
+            Move to make.
         """
         for tile, pos in move.tiles:
             self.set_square(pos, tile)
 
     def unmake_move(self, move: Move) -> None:
-        """
-        Removes a move from the board
-        :param move: move to remove
-        :return:
+        """Removes a move from the board.
+
+        Parameters
+        ----------
+        move : Move
+            Move to remove.
         """
         for _, pos in move.tiles:
             self.set_square(pos, " ")
 
     def get_words_formed(self, move: Move) -> Iterator[Move]:
-        """
-        Returns all connecting words formed by a move
-        :param move: move to form words from
-        :return: generator of moves containing the tiles of the words formed, including the original word
+        """Returns all words formed by a single move.
+
+        Moves should be made with :ref:`make_move` only after calling this function or else the mode made will be
+        removed.
+
+        Args:
+            move (Move): All tiles and their positions.
+
+        Yields:
+            Move: All tiles of the word formed and their positions (includes the original word).
         """
 
         def stop_condition(curr_square, curr_pos):
@@ -92,15 +137,11 @@ class Board:
         for tile, pos in move.tiles:
             if across:
                 tiles = list(
-                    self.traverse_axis_until_condition(
-                        pos, (1, 0), stop_condition
-                    )
+                    self.traverse_axis_until_condition(pos, (1, 0), stop_condition)
                 )  # search for word vertically
             else:
                 tiles = list(
-                    self.traverse_axis_until_condition(
-                        pos, (0, 1), stop_condition
-                    )
+                    self.traverse_axis_until_condition(pos, (0, 1), stop_condition)
                 )  # search for word horizontally
 
             # words are at least 2 letters long
@@ -110,10 +151,17 @@ class Board:
         self.unmake_move(move)
 
     def calc_score(self, move: Move) -> int:
-        """
-        Calculates the score for a move
-        :param move: move to calculate score
-        :return: score
+        """Calculates the score for a move.
+
+        Parameters
+        ----------
+        move : Move
+            All tiles and their positions.
+
+        Returns
+        -------
+        int
+            The total score of the move.
         """
         total_score = 0
 
@@ -150,29 +198,28 @@ class Board:
         return total_score
 
     def clear(self) -> None:
-        """
-        Clears the board of all tiles.
-        :return:
-        """
+        """Clears the board of all tiles."""
         self._board = np.full((15, 15), " ", dtype=object)
 
     def copy(self) -> Board:
+        """Returns a copy of the board.
+
+        Returns
+        -------
+        Board
+            A copy of the board.
         """
-        Returns a copy of the board.
-        :return: board copy
-        """
-        c = Board()
-        c._board = np.copy(self._board)
-        return c
+        return Board(np.copy(self._board))
 
     def transpose(self) -> Board:
+        """Returns a copy of the board transposed.
+
+        Returns
+        -------
+        Board
+            A copy of the board with all the coordinates transposed.
         """
-        Returns a copy of the board transposed.
-        :return: transposed board copy
-        """
-        t = Board()
-        t._board = np.transpose(self._board)
-        return t
+        return Board(np.transpose(self._board))
 
     def traverse_until_condition(
         self,
@@ -180,12 +227,27 @@ class Board:
         direction: Position,
         condition: Callable[[str, Position], bool],
     ) -> Iterator[tuple[str, Position]]:
-        """
-        Traverses the board in the given direction
-        :param start: starting board position of the traversal
-        :param direction: direction of the traversal
-        :param condition: stop condition
-        :return: generator of all tile-position tuple pairs traversed
+        """Traverses the board in the given direction.
+
+        Iterates through squares on the board by incrementing its position by the direction, until it is out of bounds
+        or a condition is fufilled.
+
+        Parameters
+        ----------
+        start : position
+            Starting position of the traversal.
+        direction : position
+            Direction of the traversal.
+        condition : Callable[[str, position], bool]
+            Stop condition. Takes in the current tile and position. If the return value is true, the traversal is
+            terminated.
+
+        Yields
+        ------
+        str
+            Traversed tile.
+        position
+            Position of the traversed tile.
         """
         current_pos = start
         while True:
@@ -207,31 +269,65 @@ class Board:
         axis: Position,
         condition: Callable[[str, Position], bool],
     ) -> Iterator[tuple[str, Position]]:
-        """
-        Traverses the board bidirectionally along the row or column axis
-        :param pos: starting board position of the traversal
-        :param axis: (1, 0) for row traversal, (0, 1) for column traversal
-        :param condition: stop condition
-        :return: generator of all tile-position tuple pairs traversed
+        """Traverses the board bidirectionally in the given direction.
+
+        Iterates through squares on the board by first decrementing its position by the direction until it is out of
+        bounds or a condition is fufilled, then incrementing.
+
+        Parameters
+        ----------
+        pos : position
+            Starting position of the traversal.
+        axis : position
+            Direction of the traversal. (1, 0) is a row traversal, (0, 1) is a column traversal.
+        condition : Callable[[str, position], bool]
+            Stop condition. Takes in the current tile and position. If the return value is true, the traversal of one
+            direction is terminated.
+
+        Yields
+        ------
+        str
+            Traversed tile.
+        position
+            Position of the traversed tile.
+
+        Notes
+        -----
+        The yield value includes the starting tile and position of the traversal.
         """
         yield from self.traverse_until_condition(
             pos, (-axis[0], -axis[1]), condition
         )  # front part
         yield self.get_square(pos), pos  # middle letter
-        yield from self.traverse_until_condition(
-            pos, axis, condition
-        )  # end part
+        yield from self.traverse_until_condition(pos, axis, condition)  # end part
 
     def traverse_axis_until_empty(
         self,
         pos: Position,
         axis: Position,
     ) -> Iterator[tuple[str, Position]]:
-        """
-        Traverses the board bidirectionally along the row or column aaxis until a blank square is reached
-        :param pos: starting board position of the traversal
-        :param axis: (1, 0) for row traversal, (0, 1) for column traversal
-        :return: generator of all tile-position tuple pairs traversed
+        """Traverses the board bidirectionally in the given direction until a blank is reached on both ends.
+
+        Iterates through squares on the board by first decrementing its position by the direction until it is out of
+        bounds or a blank square is encountered, then incrementing.
+
+        Parameters
+        ----------
+        pos : position
+            Starting position of the traversal.
+        axis : position
+            Direction of the traversal. (1, 0) is a row traversal, (0, 1) is a column traversal.
+
+        Yields
+        ------
+        str
+            Traversed tile.
+        position
+            Position of the traversed tile.
+
+        Notes
+        -----
+        The yield value includes the starting tile and position of the traversal.
         """
         yield from self.traverse_axis_until_condition(
             pos,
@@ -239,16 +335,18 @@ class Board:
             lambda tile, _: tile == " ",
         )
 
-    def display(self, *args: tuple[Position, str]):
-        """
-        Print the board
-        :param args: position and value of extra characters to add to the board display
-        :return:
+    def display(self, *args: tuple[str, Position]):
+        """Print a text-based representation of the board.
+
+        Parameters
+        ----------
+        *args : tuple[str, position], optional
+            Character and position of extra characters to be added to the board display.
         """
         contents = self._board.flatten()
 
-        for pos, s in args:
-            contents[PositionUtils.flat_pos(pos)] = s
+        for char, pos in args:
+            contents[PositionUtils.flat_pos(pos)] = char
 
         print(board_string.format(*contents))
 
@@ -276,7 +374,7 @@ for row, col in rules.TW:
     colors[PositionUtils.flat_pos((row, col))] = Board.TW_COLOR
 board_string = board_string.format(*colors)
 
-Board.boardString = board_string
+Board.board_string = board_string
 
 if __name__ == "__main__":
     b = Board()
