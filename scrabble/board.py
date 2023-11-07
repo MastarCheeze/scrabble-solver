@@ -340,8 +340,8 @@ class Board:
 
         Parameters
         ----------
-        *args : tuple[str, position], optional
-            Character and position of extra characters to be added to the board display.
+        *args : tuple[str, position]
+            Character and its position to be added to the board display.
         """
         contents = self._board.flatten()
 
