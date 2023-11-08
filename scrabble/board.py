@@ -6,8 +6,8 @@ import numpy as np
 import numpy.typing as npt
 from colorama import Fore, Back  # TODO remove colorama dependency
 
-import scrabble.rules as rules
-from scrabble.primitives import Move, PositionUtils, Position
+import rules as rules
+from primitives import Move, PositionUtils, Position
 
 
 class Board:
@@ -17,6 +17,20 @@ class Board:
     * Uppercase chars represent a tile with that letter.
     * Lowercase chars represent a blank used as a tile with that letter.
     * " " represent no tiles have been placed on the square.
+
+    Attributes
+    ----------
+    board
+    board_string : str
+        A string representing the structure of the board, used by :ref:`display` to interpolating tiles into the string.
+    DL_COLOR : str
+        The escape code for the colour of the double letter tile, used by :ref:`display`.
+    TL_COLOR : str
+        The escape code for the colour of the triple letter tile, used by :ref:`display`.
+    DW_COLOR : str
+        The escape code for the colour of the double word tile, used by :ref:`display`.
+    TW_COLOR : str
+        The escape code for the colour of the triple word tile, used by :ref:`display`.
     """
 
     board_string: str
@@ -113,6 +127,9 @@ class Board:
             Move: All tiles of the word formed and their positions (includes the original word).
         """
 
+        if len(move) <= 0:
+            return
+
         def stop_condition(curr_square, curr_pos):
             return curr_square == " " and curr_pos not in move.all_positions
 
@@ -122,19 +139,15 @@ class Board:
         across = move.across
         if across:
             base_word = Move(
-                *self.traverse_axis_until_condition(
-                    move.tiles[0][1], (0, 1), stop_condition
-                )
+                *self.traverse_axis_until_condition(move.tiles[0][1], (0, 1), stop_condition)
             )  # search for base word horizontally
         else:
             base_word = Move(
-                *self.traverse_axis_until_condition(
-                    move.tiles[0][1], (1, 0), stop_condition
-                )
+                *self.traverse_axis_until_condition(move.tiles[0][1], (1, 0), stop_condition)
             )  # search for base word vertically
         yield base_word
 
-        for tile, pos in move.tiles:
+        for _, pos in move.tiles:
             if across:
                 tiles = list(
                     self.traverse_axis_until_condition(pos, (1, 0), stop_condition)
@@ -225,7 +238,7 @@ class Board:
         self,
         start: Position,
         direction: Position,
-        condition: Callable[[str, Position], bool],
+        stop_condition: Callable[[str, Position], bool],
     ) -> Iterator[tuple[str, Position]]:
         """Traverses the board in the given direction.
 
@@ -238,7 +251,7 @@ class Board:
             Starting position of the traversal.
         direction : position
             Direction of the traversal.
-        condition : Callable[[str, position], bool]
+        stop_condition : Callable[[str, position], bool]
             Stop condition. Takes in the current tile and position. If the return value is true, the traversal is
             terminated.
 
@@ -252,13 +265,13 @@ class Board:
         current_pos = start
         while True:
             # stop traversal if out of bounds
-            current_pos = (current_pos[0] + direction[0], current_pos[1] + direction[1])
+            current_pos = PositionUtils.add_pos(current_pos, direction)
             if PositionUtils.out_of_bounds(current_pos):
                 break
 
             # stop traversal if condition is satisfied
             current_square = self.get_square(current_pos)
-            if condition(current_square, current_pos):
+            if stop_condition(current_square, current_pos):
                 break
 
             yield current_square, current_pos
@@ -267,7 +280,7 @@ class Board:
         self,
         pos: Position,
         axis: Position,
-        condition: Callable[[str, Position], bool],
+        stop_condition: Callable[[str, Position], bool],
     ) -> Iterator[tuple[str, Position]]:
         """Traverses the board bidirectionally in the given direction.
 
@@ -280,7 +293,7 @@ class Board:
             Starting position of the traversal.
         axis : position
             Direction of the traversal. (1, 0) is a row traversal, (0, 1) is a column traversal.
-        condition : Callable[[str, position], bool]
+        stop_condition : Callable[[str, position], bool]
             Stop condition. Takes in the current tile and position. If the return value is true, the traversal of one
             direction is terminated.
 
@@ -295,11 +308,11 @@ class Board:
         -----
         The yield value includes the starting tile and position of the traversal.
         """
-        yield from self.traverse_until_condition(
-            pos, (-axis[0], -axis[1]), condition
-        )  # front part
+        # front part
+        for item in list(self.traverse_until_condition(pos, (-axis[0], -axis[1]), stop_condition))[::-1]:
+            yield item
         yield self.get_square(pos), pos  # middle letter
-        yield from self.traverse_until_condition(pos, axis, condition)  # end part
+        yield from self.traverse_until_condition(pos, axis, stop_condition)  # end part
 
     def traverse_axis_until_empty(
         self,

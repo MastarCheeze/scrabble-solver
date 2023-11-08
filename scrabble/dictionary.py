@@ -4,7 +4,15 @@ import pickle
 
 
 class Node:
-    """A node in a Tree connecting to multiple branch nodes by letter-labeled edges."""
+    """A node in a Tree connecting to multiple branch nodes by letter-labeled edges.
+
+    Attributes
+    ----------
+    branch_nodes : dict[str, Node]
+        Mapping of edge letter to node connecting to edge.
+    terminal : bool
+        Whether the edges of the node from the root node makes up a valid word.
+    """
 
     def __init__(self) -> None:
         """Initialises an new node with no branches."""
@@ -119,7 +127,7 @@ class Tree:
         with open(filepath, "wb") as f:
             pickle.dump(self.root_node, f)
 
-    def get_node(self, path: str) -> Node | None:
+    def get_node(self, path: str) -> Node:
         """Get a node given the edges to the node, starting from the root node.
 
         Parameters
@@ -131,12 +139,17 @@ class Tree:
         -------
         Node | None
             Branch node found, or None if no such branch exists.
+
+        Raises
+        ------
+        KeyError
+            If path to node cannot be found.
         """
         current_node = self.root_node
         for letter in path.upper():
             next_node = current_node.get_branch(letter)
             if not next_node:
-                return None
+                raise KeyError(f"Path '{path}' to node does not exist")
             current_node = next_node
         return current_node
 
@@ -155,11 +168,12 @@ class Tree:
         Node | None
             Branch node found by following the edges of the word, or None if no such branch exists.
         """
-        found_node = self.get_node(word.upper())
-
-        if found_node is not None and found_node.terminal:
-            return found_node
-        return None
+        try:
+            found_node = self.get_node(word.upper())
+            if found_node.terminal:
+                return found_node
+        except KeyError:
+            pass
 
 
 if __name__ == "__main__":

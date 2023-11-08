@@ -57,6 +57,10 @@ class PositionUtils:
         """
         return pos[1], pos[0]
 
+    @staticmethod
+    def add_pos(pos1: Position, pos2: Position) -> Position:
+        return pos1[0] + pos2[0], pos1[1] + pos2[1]
+
 
 @dataclass
 class Move:
@@ -72,8 +76,7 @@ class Move:
         *args : tuple[str, position]
             Tile and its position on the board.
         """
-        tiles_ = [(tile[0].upper(), tile[1]) for tile in tiles]
-        self.tiles = sorted(tiles_, key=lambda tile: tile[1])
+        self.tiles = list(tiles)
 
     @property
     def across(self) -> bool:
@@ -107,7 +110,7 @@ class Move:
         """
         tiles_transposed: list[tuple[str, Position]] = []
         for tile, pos in self.tiles:
-            tiles_transposed.append((tile, pos))
+            tiles_transposed.append((tile, (pos[1], pos[0])))
 
         return Move(*tiles_transposed)
 
@@ -134,11 +137,34 @@ class Move:
                 return tile[0]
         raise KeyError(f"There is no tile at ({pos[0]}, {pos[1]})")
 
+    def get_word(self) -> str:
+        """Returns the word formed by the tile when all the tiles are in a single line.
+
+        Returns
+        -------
+        str
+            Word formed.
+        """
+        if self.tiles:
+            self.tiles.sort(key=lambda tile: tile[1])
+            return "".join(list(zip(*self.tiles))[0])
+        return ""
+
+    def copy(self) -> Move:
+        """Returns a copy of the move.
+
+        Returns
+        -------
+        Move
+            Copy of the move.
+        """
+        return Move(*self.tiles)
+
     @staticmethod
     def anchored_to_moves(
         word: str,
         anchor_pos: Position,
-        anchor_letter_index: int,
+        anchor_index: int,
         across: bool = True,
     ) -> Move:
         """Creates a new Move object with the full word and anchor position.
@@ -149,7 +175,7 @@ class Move:
             The full word formed by the tiles.
         anchor_pos : Position
             The position of the anchor tile on the board.
-        anchor_letter_index : int
+        anchor_index : int
             The index of the anchor tile in the word string.
         across : bool, optional
             Whether the word oriented horizontally, by default True
@@ -162,9 +188,9 @@ class Move:
         tiles: list[tuple[str, Position]] = []
         for i, tile in enumerate(word):
             if across:
-                pos = (anchor_pos[0], anchor_pos[1] - anchor_letter_index + i)
+                pos = (anchor_pos[0], anchor_pos[1] - anchor_index + i)
             else:
-                pos = (anchor_pos[0] - anchor_letter_index + i, anchor_pos[1])
+                pos = (anchor_pos[0] - anchor_index + i, anchor_pos[1])
             tiles.append((tile, pos))
 
         return Move(*tiles)
@@ -174,6 +200,14 @@ class Move:
 
     def __sub__(self, __value: tuple[str, Position]) -> Move:
         return Move(*set(self.tiles) - {__value})
+
+    def __iadd__(self, __value: tuple[str, Position]) -> Move:
+        self.tiles.append(__value)
+        return self
+
+    def __isub__(self, __value: tuple[str, Position]) -> Move:
+        self.tiles.remove(__value)
+        return self
 
     def __len__(self) -> int:
         return len(self.tiles)

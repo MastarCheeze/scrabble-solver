@@ -1,7 +1,8 @@
+import os
 import json
 
 # load rule file
-RULE_FILE = "assets/rules.json"
+RULE_FILE = os.path.join(os.path.dirname(__file__), "rules.json")
 with open(RULE_FILE, "r") as f:
     data = json.load(f)
 
