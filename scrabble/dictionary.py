@@ -28,11 +28,6 @@ class Node:
             Single-character string to represent the edge that when followed leads to the branch node.
         node : Node
             Branch node connected by the edge.
-
-        Raises
-        ------
-        ValueError
-            If the edge going out of the node already exists.
         """
         edge = edge.upper()
         if self.branch_nodes.get(edge) is not None:
