@@ -1,11 +1,12 @@
 from typing import Iterator
+
 import numpy as np
 import numpy.typing as npt
 from scipy.signal import convolve2d
 
-from board import Board
-from dictionary import Node, Tree
-from primitives import Move, Position, PositionUtils
+from scrabble.board import Board
+from scrabble.dictionary import Node, Tree
+from scrabble.primitives import Move, Position, PositionUtils
 
 
 class MoveGenerator:
@@ -317,7 +318,7 @@ if __name__ == "__main__":
     move = Move.anchored_to_moves("DAFFS", (8, 11), 0, False)
     b.make_move(move)
 
-    possible_moves = list(mg.calc_all_moves(list("QUI??ER")))
+    possible_moves = list(mg.calc_all_moves(list("QUI  ER")))
     best_move = max(possible_moves, key=b.calc_score)
     print(b.calc_score(best_move), len(possible_moves))
     b.make_move(best_move)

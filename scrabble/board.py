@@ -6,8 +6,8 @@ import numpy as np
 import numpy.typing as npt
 from colorama import Back  # TODO remove colorama dependency
 
-import rules as rules
-from primitives import Move, PositionUtils, Position
+import scrabble.rules as rules
+from scrabble.primitives import Move, Position, PositionUtils
 
 
 class Board:
