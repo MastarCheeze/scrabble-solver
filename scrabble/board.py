@@ -4,7 +4,7 @@ from typing import Callable, Iterator
 
 import numpy as np
 import numpy.typing as npt
-from colorama import Fore, Back  # TODO remove colorama dependency
+from colorama import Back  # TODO remove colorama dependency
 
 import rules as rules
 from primitives import Move, PositionUtils, Position
@@ -39,7 +39,7 @@ class Board:
     DW_COLOR = Back.YELLOW
     TW_COLOR = Back.RED
 
-    def __init__(self, board: npt.NDArray | None = None) -> None:
+    def __init__(self, board: npt.NDArray[np.unicode_] | None = None) -> None:
         """Initialises an empty board.
 
         Parameters
@@ -53,7 +53,7 @@ class Board:
             self._board = board
 
     @property
-    def board(self) -> npt.NDArray[np.int_]:
+    def board(self) -> npt.NDArray[np.unicode_]:
         """Returns the board.
 
         Returns
@@ -130,7 +130,7 @@ class Board:
         if len(move) <= 0:
             return
 
-        def stop_condition(curr_square, curr_pos):
+        def stop_condition(curr_square: str, curr_pos: Position):
             return curr_square == " " and curr_pos not in move.all_positions
 
         self.make_move(move)

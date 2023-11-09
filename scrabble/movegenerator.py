@@ -1,4 +1,3 @@
-from tkinter import ANCHOR
 from typing import Iterator
 import numpy as np
 import numpy.typing as npt
