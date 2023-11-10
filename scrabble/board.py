@@ -4,7 +4,6 @@ from typing import Callable, Iterator
 
 import numpy as np
 import numpy.typing as npt
-from colorama import Back  # TODO remove colorama dependency
 
 import scrabble.rules as rules
 from scrabble.primitives import Move, Position, PositionUtils
@@ -34,10 +33,10 @@ class Board:
     """
 
     board_string: str
-    DL_COLOR = Back.CYAN
-    TL_COLOR = Back.BLUE
-    DW_COLOR = Back.YELLOW
-    TW_COLOR = Back.RED
+    DL_COLOR = "\x1b[46m"
+    TL_COLOR = "\x1b[44m"
+    DW_COLOR = "\x1b[43m"
+    TW_COLOR = "\x1b[41m"
 
     def __init__(self, board: npt.NDArray[np.unicode_] | None = None) -> None:
         """Initialises an empty board.
@@ -365,7 +364,7 @@ class Board:
 
 
 # build board display debug string
-SQUARE_STRING = f"{{}} {{{{}}}} {Back.RESET} "
+SQUARE_STRING = f"{{}} {{{{}}}} \x1b[49m "
 
 board_string = ""
 board_string += "   " + "  ".join(str(i).rjust(2) for i in range(15)) + "\n"
@@ -376,7 +375,7 @@ for rowIdx in range(15):
 board_string = board_string.rstrip()
 
 # insert color into board display string
-colors = [Back.LIGHTBLACK_EX for _ in range(15 * 15)]
+colors = ["\x1b[100m" for _ in range(15 * 15)]
 for row, col in rules.DL:
     colors[PositionUtils.flat_pos((row, col))] = Board.DL_COLOR
 for row, col in rules.TL:
@@ -388,10 +387,3 @@ for row, col in rules.TW:
 board_string = board_string.format(*colors)
 
 Board.board_string = board_string
-
-if __name__ == "__main__":
-    b = Board()
-    move = Move.anchored_to_moves("banana", (7, 7), 0)
-    print(b.calc_score(move))
-    b.make_move(move)
-    b.display()
