@@ -181,7 +181,7 @@ class MoveGenerator:
                 return
 
             # loop through all possible continuations from the current node
-            for edge, node in current_node.branch_nodes.items():  # TODO put rack first
+            for edge, node in current_node.branch_nodes.items():
                 if edge in cross_check[current_pos]:
                     # place tile if it is legal and not a blank
                     if edge in rack:
