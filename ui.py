@@ -186,7 +186,6 @@ def draw_tile(board_pos: Position, letter: str, palette: dict[str, str]):
 
     # blank tile
     else:
-        print(repr(letter))
         # draw circle
         pygame.draw.circle(
             SCREEN,

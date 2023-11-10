@@ -97,7 +97,6 @@ def handle_rack_keyboard_input(event: pygame.event.Event):
 
 
 def handle_undo():
-    print(solver.history)
     if solver.history:
         for _ in range(2):
             to_undo = solver.history.pop()
@@ -106,7 +105,6 @@ def handle_undo():
 
 
 def handle_redo():
-    print(solver.undo_history)
     if solver.undo_history:
         for _ in range(2):
             to_redo = solver.undo_history.pop()
