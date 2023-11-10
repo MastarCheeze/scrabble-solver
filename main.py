@@ -27,11 +27,6 @@ def handle_board_mouse_input(pos: tuple[int, int]):
         else:
             arrow_pos = None
 
-        # redraw
-        draw_board(screen, solver)
-        if arrow_pos is not None:
-            draw_arrow(screen, arrow_pos, arrow_across)
-
 
 def handle_board_keyboard_input(event: pygame.event.Event):
     global arrow_pos
@@ -41,7 +36,7 @@ def handle_board_keyboard_input(event: pygame.event.Event):
 
     direction = (0, 1) if arrow_across else (1, 0)
     letter = event.unicode.lower()
-    if letter in "abcdefghijklmnopqrstuvwxyz" and not PositionUtils.out_of_bounds(arrow_pos):
+    if letter in list("abcdefghijklmnopqrstuvwxyz") and not PositionUtils.out_of_bounds(arrow_pos):
         # remove overlapping edit tile if it exists
         try:
             solver.edits -= (solver.edits.get_tile(arrow_pos), arrow_pos)
@@ -94,7 +89,7 @@ def handle_rack_keyboard_input(event: pygame.event.Event):
         return
 
     letter = event.unicode
-    if letter in "abcdefghijklmnopqrstuvwxyz":
+    if letter in list("abcdefghijklmnopqrstuvwxyz"):
         solver.rack.append(letter.upper())
     elif letter == " ":
         if solver.rack.count(" ") < 2:
@@ -130,6 +125,10 @@ while running:
             if BOARD_RECT.collidepoint(pos):
                 focus = 0
                 handle_board_mouse_input(pos)
+                draw_board(screen, solver)
+                if arrow_pos is not None:
+                    draw_arrow(screen, arrow_pos, arrow_across)
+                    draw_rack(screen, solver)
             elif RACK_RECT.collidepoint(pos):
                 focus = 1
             else:
@@ -141,6 +140,7 @@ while running:
                 draw_board(screen, solver)
                 if arrow_pos is not None:
                     draw_arrow(screen, arrow_pos, arrow_across)
+                    draw_rack(screen, solver)
             elif focus == 1:
                 handle_rack_keyboard_input(event)
                 draw_rack(screen, solver)
