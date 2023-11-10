@@ -297,29 +297,5 @@ class MoveGenerator:
         for move in self._calc_all_across_moves(self._board.transpose(), rack):
             yield move.transpose()
 
-
-if __name__ == "__main__":
-    from board import Board
-    from dictionary import Node, Tree
-    from primitives import Move
-
-    b = Board()
-    d = Tree.build_from_save("assets/CSW21.pickle")
-    mg = MoveGenerator(b, d)
-
-    move = Move.anchored_to_moves("HOLIDAY", (7, 3), 0, True)
-    b.make_move(move)
-    move = Move.anchored_to_moves("BANDANA", (4, 7), 0, False)
-    b.make_move(move)
-    move = Move.anchored_to_moves("GONDOLA", (9, 5), 0, True)
-    b.make_move(move)
-    move = Move.anchored_to_moves("BLIGHT", (6, 5), 0, False)
-    b.make_move(move)
-    move = Move.anchored_to_moves("DAFFS", (8, 11), 0, False)
-    b.make_move(move)
-
-    possible_moves = list(mg.calc_all_moves(list("QUI  ER")))
-    best_move = max(possible_moves, key=b.calc_score)
-    print(b.calc_score(best_move), len(possible_moves))
-    b.make_move(best_move)
-    b.display()
+        # yield pass move
+        yield Move()
