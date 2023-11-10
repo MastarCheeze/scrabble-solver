@@ -12,6 +12,10 @@ class Solver:
         self.move_generator = MoveGenerator(self.board, self.dictionary)
         self.rack: list[str] = []
         self.pool = rules.TILE_POOL[:]
+
         self.history: list[Move] = []
+        self.undo_history: list[Move] = []
+
         self.last_move = Move()
         self.edits = Move()
+        self.status_text = ""

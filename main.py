@@ -96,24 +96,79 @@ def handle_rack_keyboard_input(event: pygame.event.Event):
             solver.rack.append(" ")
 
 
-# board setup
-solver = Solver()
-solver.board.make_move(Move.anchored_to_moves("HOLIDAY", (7, 3), 0, True))
-solver.board.make_move(Move.anchored_to_moves("BANDANA", (4, 7), 0, False))
-solver.board.make_move(Move.anchored_to_moves("GONDOLA", (9, 5), 0, True))
-solver.board.make_move(Move.anchored_to_moves("BLIGHT", (6, 5), 0, False))
-solver.board.make_move(Move.anchored_to_moves("DAFFS", (8, 11), 0, False))
+def handle_undo():
+    print(solver.history)
+    if solver.history:
+        for _ in range(2):
+            to_undo = solver.history.pop()
+            solver.board.unmake_move(to_undo)
+            solver.undo_history.append(to_undo)
 
-# pygame setup
+
+def handle_redo():
+    print(solver.undo_history)
+    if solver.undo_history:
+        for _ in range(2):
+            to_redo = solver.undo_history.pop()
+            solver.board.make_move(to_redo)
+            solver.history.append(to_redo)
+
+
+def handle_clear_edits():
+    solver.edits = Move()
+
+
+def handle_clear_all():
+    solver.history.clear()
+    solver.edits = Move()
+    solver.board.clear()
+    solver.rack.clear()
+    solver.status_text = ""
+
+
+def handle_calc_move():
+    # make opponent move
+    solver.board.make_move(solver.edits)
+    solver.history.append(solver.edits)
+
+    # make computer move
+    computer_move = max(solver.move_generator.calc_all_moves(solver.rack), key=solver.board.calc_score)
+    words_formed = list(solver.board.get_words_formed(computer_move))
+    if words_formed:
+        solver.status_text = (
+            ", ".join(move.get_word() for move in words_formed) + ": " + str(solver.board.calc_score(computer_move))
+        )
+    else:
+        solver.status_text = "PASS"
+    solver.board.make_move(computer_move)
+    solver.history.append(computer_move)
+
+    # if both moves are blank, do nothing
+    if len(solver.edits) == len(computer_move) == 0:
+        solver.history.pop()
+        solver.history.pop()
+        solver.status_text = ""
+        return
+
+    solver.undo_history.clear()
+    solver.rack.clear()
+    solver.edits = Move()
+    solver.last_move = computer_move
+
+
+# setup
+solver = Solver()
 pygame.init()
-screen = pygame.display.set_mode(WINDOW_SIZE)
 clock = pygame.time.Clock()
 
 running = True
-focus = 1  # 0 for board, 1 for rack, 2 for toolbar
+focus_board = False  # True for board, False for rack
 arrow_pos = None
 arrow_across = True
-draw_board(screen, solver)
+draw_board(solver)
+draw_toolbar()
+draw_rack(solver)
+draw_status_bar(solver)
 while running:
     # poll for events
     for event in pygame.event.get():
@@ -122,30 +177,67 @@ while running:
 
         elif event.type == pygame.MOUSEBUTTONUP:
             pos = pygame.mouse.get_pos()
+            # clicked on board
             if BOARD_RECT.collidepoint(pos):
-                focus = 0
+                focus_board = True
                 handle_board_mouse_input(pos)
-                draw_board(screen, solver)
+                draw_board(solver)
                 if arrow_pos is not None:
-                    draw_arrow(screen, arrow_pos, arrow_across)
-                    draw_rack(screen, solver)
+                    draw_arrow(arrow_pos, arrow_across)
+                    draw_rack(solver)
+            # clicked on rack
             elif RACK_RECT.collidepoint(pos):
-                focus = 1
-            else:
-                focus = 2
+                focus_board = False
+            # clicked on toolbar icon
+            elif UNDO_RECT.collidepoint(pos):
+                handle_undo()
+                draw_board(solver)
+                if arrow_pos is not None:
+                    draw_arrow(arrow_pos, arrow_across)
+                    draw_rack(solver)
+                draw_status_bar(solver)
+            elif REDO_RECT.collidepoint(pos):
+                handle_redo()
+                draw_board(solver)
+                arrow_pos = None
+                draw_status_bar(solver)
+            elif CLEAR_EDITS_RECT.collidepoint(pos):
+                handle_clear_edits()
+                draw_board(solver)
+                arrow_pos = None
+            elif CLEAR_ALL_RECT.collidepoint(pos):
+                handle_clear_all()
+                draw_board(solver)
+                if arrow_pos is not None:
+                    draw_arrow(arrow_pos, arrow_across)
+                draw_rack(solver)
+                draw_status_bar(solver)
+            elif CALC_MOVE_RECT.collidepoint(pos):
+                handle_calc_move()
+                draw_board(solver)
+                draw_rack(solver)
+                arrow_pos = None
+                draw_status_bar(solver)
 
         elif event.type == pygame.KEYDOWN:
-            if focus == 0:
+            # calc move if enter is pressed
+            if event.key == pygame.K_RETURN:
+                handle_calc_move()
+                draw_board(solver)
+                draw_rack(solver)
+                arrow_pos = None
+                draw_status_bar(solver)
+            # keydown in board
+            elif focus_board:
                 handle_board_keyboard_input(event)
-                draw_board(screen, solver)
+                draw_board(solver)
                 if arrow_pos is not None:
-                    draw_arrow(screen, arrow_pos, arrow_across)
-                    draw_rack(screen, solver)
-            elif focus == 1:
+                    draw_arrow(arrow_pos, arrow_across)
+                    draw_rack(solver)
+            # keydown in rack
+            else:
                 handle_rack_keyboard_input(event)
-                draw_rack(screen, solver)
-
-    # render
+                draw_rack(solver)
 
     # update
     pygame.display.flip()
