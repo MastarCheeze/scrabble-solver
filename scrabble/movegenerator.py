@@ -277,17 +277,20 @@ class MoveGenerator:
                     *board.traverse_until_condition(anchor, (0, -1), lambda tile, _: tile == " ")
                 )
                 left_part = existing_left_part_tiles.get_word()
-                yield from self._right_part(
-                    board,
-                    rack,
-                    anchor,
-                    len(left_part),
-                    cross_check,
-                    left_part,
-                    self._dictionary.get_node(left_part),
-                    anchor,
-                    Move(),
-                )
+                try:
+                    yield from self._right_part(
+                        board,
+                        rack,
+                        anchor,
+                        len(left_part),
+                        cross_check,
+                        left_part,
+                        self._dictionary.get_node(left_part),
+                        anchor,
+                        Move(),
+                    )
+                except KeyError:
+                    pass
 
     def calc_all_moves(self, rack: list[str]) -> Iterator[Move]:
         # get all legal across moves
