@@ -125,7 +125,19 @@ def handle_clear_all():
 
 
 def handle_calc_move():
+    solver.status_text = ""
+
     # make opponent move
+    illegal_words = []
+    if solver.legal_check:
+        words_formed = list(solver.board.get_words_formed(solver.edits))
+        for word in words_formed:
+            if not solver.dictionary.lookup(word.get_word()):
+                solver.edits = Move()
+                illegal_words.append(word.get_word())
+
+    if illegal_words:
+        solver.status_text += "Illegal words: " + ", ".join(illegal_words) + ". "
     solver.board.make_move(solver.edits)
     solver.history.append(solver.edits)
 
@@ -133,7 +145,7 @@ def handle_calc_move():
     computer_move = max(solver.move_generator.calc_all_moves(solver.rack), key=solver.board.calc_score)
     words_formed = list(solver.board.get_words_formed(computer_move))
     if words_formed:
-        solver.status_text = (
+        solver.status_text += (
             ", ".join(move.get_word() for move in words_formed) + ": " + str(solver.board.calc_score(computer_move))
         )
     else:
@@ -164,7 +176,7 @@ focus_board = False  # True for board, False for rack
 arrow_pos = None
 arrow_across = True
 draw_board(solver)
-draw_toolbar()
+draw_toolbar(solver)
 draw_rack(solver)
 draw_status_bar(solver)
 while running:
@@ -210,6 +222,9 @@ while running:
                     draw_arrow(arrow_pos, arrow_across)
                 draw_rack(solver)
                 draw_status_bar(solver)
+            elif LEGAL_CHECK_RECT.collidepoint(pos):
+                solver.legal_check = not solver.legal_check
+                draw_toolbar(solver)
             elif CALC_MOVE_RECT.collidepoint(pos):
                 handle_calc_move()
                 draw_board(solver)

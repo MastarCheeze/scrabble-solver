@@ -19,3 +19,4 @@ class Solver:
         self.last_move = Move()
         self.edits = Move()
         self.status_text = ""
+        self.legal_check = True

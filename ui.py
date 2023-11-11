@@ -78,6 +78,12 @@ CLEAR_EDITS_IMG = pygame.transform.scale(
 CLEAR_ALL_IMG = pygame.transform.scale(
     pygame.image.load("assets/clear_all.png"), (TOOLBAR_ICON_SIZE, TOOLBAR_ICON_SIZE)
 )
+LEGAL_CHECK_ON_IMG = pygame.transform.scale(
+    pygame.image.load("assets/legal_check_on.png"), (TOOLBAR_ICON_SIZE, TOOLBAR_ICON_SIZE)
+)
+LEGAL_CHECK_OFF_IMG = pygame.transform.scale(
+    pygame.image.load("assets/legal_check_off.png"), (TOOLBAR_ICON_SIZE, TOOLBAR_ICON_SIZE)
+)
 CALC_MOVE_IMG = pygame.transform.scale(
     pygame.image.load("assets/calc_move.png"), (TOOLBAR_ICON_SIZE, TOOLBAR_ICON_SIZE)
 )
@@ -103,6 +109,7 @@ UNDO_RECT = Rect(TOOLBAR_H * TOOLBAR_ICON_ORDER.index(UNDO_IMG), 0, TOOLBAR_H, T
 REDO_RECT = Rect(TOOLBAR_H * TOOLBAR_ICON_ORDER.index(REDO_IMG), 0, TOOLBAR_H, TOOLBAR_H)
 CLEAR_EDITS_RECT = Rect(TOOLBAR_H * TOOLBAR_ICON_ORDER.index(CLEAR_EDITS_IMG), 0, TOOLBAR_H, TOOLBAR_H)
 CLEAR_ALL_RECT = Rect(TOOLBAR_H * TOOLBAR_ICON_ORDER.index(CLEAR_ALL_IMG), 0, TOOLBAR_H, TOOLBAR_H)
+LEGAL_CHECK_RECT = Rect(BOARD_SIZE - TOOLBAR_H * 2, 0, TOOLBAR_H, TOOLBAR_H)
 CALC_MOVE_RECT = Rect(BOARD_SIZE - TOOLBAR_H, 0, TOOLBAR_H, TOOLBAR_H)
 
 
@@ -260,7 +267,7 @@ def draw_rack_tile(x: int, letter: str):
         SCREEN.blit(text, text_pos)
 
 
-def draw_toolbar():
+def draw_toolbar(solver: Solver):
     pygame.draw.rect(SCREEN, TOOLBAR_BG_COLOR, TOOLBAR_RECT)
 
     # undo button
@@ -298,6 +305,15 @@ def draw_toolbar():
         TOOLBAR_ICON_SIZE,
     )
     SCREEN.blit(CLEAR_ALL_IMG, img_pos)
+
+    # legal check button
+    img_pos = Rect(
+        LEGAL_CHECK_RECT.x + TOOLBAR_ICON_PADDING,
+        LEGAL_CHECK_RECT.y + TOOLBAR_ICON_PADDING,
+        TOOLBAR_ICON_SIZE,
+        TOOLBAR_ICON_SIZE,
+    )
+    SCREEN.blit(LEGAL_CHECK_ON_IMG if solver.legal_check else LEGAL_CHECK_OFF_IMG, img_pos)
 
     # calc move button
     img_pos = Rect(
